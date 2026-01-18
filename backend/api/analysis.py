@@ -1,10 +1,10 @@
 from fastapi import APIRouter
 from typing import Dict, Any
-from backend.core.analysis_service import (
+from core.analysis_service import (
     get_salary_analysis, get_city_analysis, 
     get_experience_analysis, get_industry_analysis
 )
-from backend.core.real_time_analysis import get_real_time_analysis
+from core.real_time_analysis import get_real_time_analysis
 
 router = APIRouter(prefix="/analysis", tags=["analysis"])
 

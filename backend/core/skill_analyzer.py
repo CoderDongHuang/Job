@@ -2,7 +2,7 @@ import asyncio
 import re
 from typing import List, Dict, Tuple, Any
 from collections import Counter, defaultdict
-from backend.schemas.skill import SkillAnalysisRequest, SkillAnalysisResponse
+from schemas.skill import SkillAnalysisRequest, SkillAnalysisResponse
 
 # 技能词典 - 这里是部分常用技能，实际项目中可以从外部加载
 SKILL_DICTIONARY = {

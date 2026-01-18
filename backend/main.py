@@ -1,7 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.api import router as api_router
-from backend.core.job_service import initialize_job_data
+import sys
+import os
+
+# 添加当前目录到Python路径
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+from api import router as api_router
+from core.job_service import initialize_job_data
 import asyncio
 import uvicorn
 

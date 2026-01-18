@@ -167,13 +167,37 @@ export default {
       // 城市薪资对比图
       if (cityChart) {
         const cityOption = {
-          title: { text: '城市平均薪资对比', left: 'center' },
+          title: { 
+            text: '城市平均薪资对比', 
+            left: 'center',
+            top: '10px',
+            textStyle: {
+              fontSize: 16,
+              fontWeight: 'bold',
+              color: '#333'
+            }
+          },
+          grid: {
+            top: '60px',
+            bottom: '30px',
+            left: '60px',
+            right: '30px'
+          },
           xAxis: { type: 'category', data: data.cities || [] },
           yAxis: { type: 'value', name: '薪资 (元)' },
           series: [{
-            data: data.salaries || [],
+            data: (data.salaries || []).map(salary => ({
+              value: salary,
+              itemStyle: { color: '#52c41a' }
+            })),
             type: 'bar',
-            itemStyle: { color: '#52c41a' }
+            label: {
+              show: true,
+              position: 'top',
+              formatter: '{c}元',
+              fontSize: 12,
+              color: '#333'
+            }
           }]
         }
         cityChart.setOption(cityOption)
@@ -182,47 +206,119 @@ export default {
       // 经验要求分布图
       if (experienceChart) {
         const expOption = {
-          title: { text: '经验要求分布', left: 'center' },
+          title: { 
+            text: '经验要求分布', 
+            left: 'center',
+            top: '10px',
+            textStyle: {
+              fontSize: 16,
+              fontWeight: 'bold',
+              color: '#333'
+            }
+          },
+          grid: {
+            top: '60px',
+            bottom: '30px',
+            left: '60px',
+            right: '30px'
+          },
           xAxis: { type: 'category', data: data.experiences || [] },
           yAxis: { type: 'value' },
           series: [{
-            data: data.counts || [],
+            data: (data.counts || []).map(count => ({
+              value: count,
+              itemStyle: { color: '#fa8c16' }
+            })),
             type: 'bar',
-            itemStyle: { color: '#fa8c16' }
+            label: {
+              show: true,
+              position: 'top',
+              formatter: '{c}个',
+              fontSize: 12,
+              color: '#333'
+            }
           }]
         }
         experienceChart.setOption(expOption)
       }
       
       // 行业薪资对比图
-      if (industryChart) {
-        const industryOption = {
-          title: { text: '行业平均薪资对比', left: 'center' },
-          xAxis: { type: 'value', name: '薪资 (元)' },
-          yAxis: { type: 'category', data: data.industries || [] },
-          series: [{
-            data: data.industry_salaries || [],
-            type: 'bar',
-            itemStyle: { color: '#1890ff' }
-          }]
+        if (industryChart) {
+          const industryOption = {
+            title: { 
+              text: '行业平均薪资对比', 
+              left: 'center',
+              top: '10px',
+              textStyle: {
+                fontSize: 16,
+                fontWeight: 'bold',
+                color: '#333'
+              }
+            },
+            grid: {
+              top: '60px',
+              bottom: '30px',
+              left: '80px',
+              right: '60px'
+            },
+            xAxis: { type: 'value', name: '薪资 (元)' },
+            yAxis: { type: 'category', data: data.industries || [] },
+            series: [{
+              data: (data.industry_salaries || []).map(salary => ({
+                value: salary,
+                itemStyle: { color: '#1890ff' }
+              })),
+              type: 'bar',
+              label: {
+                show: true,
+                position: 'right',
+                formatter: '{c}元',
+                fontSize: 12,
+                color: '#333'
+              }
+            }]
+          }
+          industryChart.setOption(industryOption)
         }
-        industryChart.setOption(industryOption)
-      }
       
       // 技能热度排行榜
-      if (skillChart) {
-        const skillOption = {
-          title: { text: '技能热度排行榜', left: 'center' },
-          xAxis: { type: 'category', data: data.skills || [] },
-          yAxis: { type: 'value' },
-          series: [{
-            data: data.skill_counts || [],
-            type: 'bar',
-            itemStyle: { color: '#722ed1' }
-          }]
+        if (skillChart) {
+          const skillOption = {
+            title: { 
+              text: '技能热度排行榜', 
+              left: 'center',
+              top: '10px',
+              textStyle: {
+                fontSize: 16,
+                fontWeight: 'bold',
+                color: '#333'
+              }
+            },
+            grid: {
+              top: '60px',
+              bottom: '30px',
+              left: '60px',
+              right: '30px'
+            },
+            xAxis: { type: 'category', data: data.skills || [] },
+            yAxis: { type: 'value' },
+            series: [{
+              data: (data.skill_counts || []).map(count => ({
+                value: count,
+                itemStyle: { color: '#722ed1' }
+              })),
+              type: 'bar',
+              label: {
+                show: true,
+                position: 'top',
+                formatter: '{c}次',
+                fontSize: 12,
+                color: '#333'
+              }
+            }]
+          }
+          skillChart.setOption(skillOption)
         }
-        skillChart.setOption(skillOption)
-      }
     }
     
     // 初始化图表

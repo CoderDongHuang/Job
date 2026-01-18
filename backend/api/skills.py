@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from typing import List
-from backend.schemas.skill import SkillAnalysisRequest, SkillAnalysisResponse
-from backend.core.skill_analyzer import analyze_skills, get_skill_trends, extract_skills_from_text, get_skill_recommendations
+from schemas.skill import SkillAnalysisRequest, SkillAnalysisResponse
+from core.skill_analyzer import analyze_skills, get_skill_trends, extract_skills_from_text, get_skill_recommendations
 
 router = APIRouter(prefix="/skills", tags=["skills"])
 

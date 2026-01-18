@@ -3,11 +3,11 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import List, Optional
 from datetime import timedelta
 
-from backend.schemas.user import (
+from schemas.user import (
     UserCreate, UserResponse, UserLogin, Token, 
     UserUpdate, UserProfileUpdate, UserSkillUpdate
 )
-from backend.core.user_service import (
+from core.user_service import (
     create_user, authenticate_user, get_user_by_id,
     update_user_profile, update_user_skills, get_user_recommendations,
     get_demo_users, UserService

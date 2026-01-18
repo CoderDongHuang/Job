@@ -2,7 +2,7 @@
 import axios from 'axios'
 
 const request = axios.create({
-  baseURL: '/api/v1', // 所有API请求都会加上 /api/v1 前缀，会被代理捕获
+  baseURL: 'http://127.0.0.1:8000/api/v1', // 直接连接到后端API地址
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json'

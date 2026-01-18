@@ -5,8 +5,8 @@
 import asyncio
 from typing import Dict, List, Any
 from collections import Counter
-from backend.database.database import SessionLocal
-from backend.models import Job
+from database.database import SessionLocal
+from models import Job
 
 async def get_real_time_analysis() -> Dict[str, Any]:
     """获取实时数据分析结果"""

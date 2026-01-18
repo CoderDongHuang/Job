@@ -3,10 +3,10 @@ import json
 from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from backend.models import Job
-from backend.schemas.job import JobCreate, JobUpdate, JobResponse
-from backend.database.database import SessionLocal
-from backend.utils.data_fetcher import fetch_job_data
+from models import Job
+from schemas.job import JobCreate, JobUpdate, JobResponse
+from database.database import SessionLocal
+from utils.data_fetcher import fetch_job_data
 
 async def create_job(job_data: JobCreate) -> JobResponse:
     """创建职位"""
@@ -29,7 +29,7 @@ async def create_job(job_data: JobCreate) -> JobResponse:
 
 async def get_job_by_id(job_id: int) -> Optional[JobResponse]:
     """根据ID获取职位"""
-    from backend.database.database import SessionLocal
+    from database.database import SessionLocal
     db = SessionLocal()
     try:
         db_job = db.query(Job).filter(Job.id == job_id).first()
@@ -51,7 +51,7 @@ async def get_jobs(
     category: Optional[str] = None
 ) -> List[JobResponse]:
     """获取职位列表"""
-    from backend.database.database import SessionLocal
+    from database.database import SessionLocal
     db = SessionLocal()
     try:
         query = db.query(Job)
@@ -93,7 +93,7 @@ async def get_jobs(
 
 async def update_job(job_id: int, job_data: JobUpdate) -> Optional[JobResponse]:
     """更新职位信息"""
-    from backend.database.database import SessionLocal
+    from database.database import SessionLocal
     db = SessionLocal()
     try:
         db_job = db.query(Job).filter(Job.id == job_id).first()
@@ -113,7 +113,7 @@ async def update_job(job_id: int, job_data: JobUpdate) -> Optional[JobResponse]:
 
 async def delete_job(job_id: int) -> bool:
     """删除职位"""
-    from backend.database.database import SessionLocal
+    from database.database import SessionLocal
     db = SessionLocal()
     try:
         db_job = db.query(Job).filter(Job.id == job_id).first()
@@ -129,7 +129,7 @@ async def delete_job(job_id: int) -> bool:
 
 async def initialize_job_data() -> int:
     """初始化职位数据"""
-    from backend.database.database import SessionLocal
+    from database.database import SessionLocal
     db = SessionLocal()
     try:
         # 检查是否已有数据
@@ -169,7 +169,7 @@ async def initialize_job_data() -> int:
 
 async def get_job_statistics() -> Dict[str, Any]:
     """获取职位统计信息"""
-    from backend.database.database import SessionLocal
+    from database.database import SessionLocal
     db = SessionLocal()
     try:
         # 总职位数
@@ -218,7 +218,7 @@ async def search_jobs(
     limit: int = 10
 ) -> List[JobResponse]:
     """搜索职位"""
-    from backend.database.database import SessionLocal
+    from database.database import SessionLocal
     db = SessionLocal()
     try:
         query = db.query(Job)

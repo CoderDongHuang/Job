@@ -1,8 +1,8 @@
 import asyncio
 from typing import Dict, List, Any
 from collections import Counter
-from backend.database.database import SessionLocal
-from backend.models import Job
+from database.database import SessionLocal
+from models import Job
 
 async def get_salary_analysis() -> Dict[str, Any]:
     """薪资分析"""

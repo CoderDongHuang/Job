@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import List, Optional
-from backend.schemas.job import JobCreate, JobResponse
-from backend.core.job_service import (
+from schemas.job import JobCreate, JobResponse
+from core.job_service import (
     create_job, get_jobs, get_job_by_id, 
     search_jobs, delete_job, update_job
 )

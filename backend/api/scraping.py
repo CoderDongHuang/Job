@@ -1,11 +1,9 @@
 from fastapi import APIRouter, HTTPException, BackgroundTasks
-from typing import Dict, Any
 from pydantic import BaseModel
-from backend.utils.data_fetcher import fetch_job_data
-from backend.database.database import SessionLocal
-from backend.models import Job
+from typing import Dict, Any
+from database.database import SessionLocal
+from models import Job
 from sqlalchemy import func
-import json
 from datetime import datetime
 
 class ScrapingRequest(BaseModel):

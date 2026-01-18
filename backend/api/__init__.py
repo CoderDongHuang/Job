@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from backend.api import jobs, skills, analysis, users, scraping
+from . import jobs, skills, analysis, users, scraping
 
 router = APIRouter()
 
