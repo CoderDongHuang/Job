@@ -1,0 +1,33 @@
+{
+  "name": "zhi-analyze-frontend",
+  "version": "1.0.0",
+  "description": "智析招聘 - 前端项目",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint src --ext .vue,.js,.jsx,.cjs,.mjs --fix",
+    "format": "prettier --write src/"
+  },
+  "dependencies": {
+    "vue": "^3.3.4",
+    "vue-router": "^4.2.5",
+    "pinia": "^2.1.7",
+    "@element-plus/icons-vue": "^2.1.0",
+    "element-plus": "^2.4.2",
+    "axios": "^1.6.0",
+    "echarts": "^5.4.3",
+    "vue-echarts": "^6.6.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^4.4.0",
+    "vite": "^4.4.11",
+    "@rushstack/eslint-patch": "^1.5.1",
+    "@vue/eslint-config-prettier": "^8.0.0",
+    "eslint": "^8.52.0",
+    "eslint-plugin-vue": "^9.17.0",
+    "prettier": "^3.0.3",
+    "sass": "^1.69.5"
+  }
+}
