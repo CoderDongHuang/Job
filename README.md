@@ -14,18 +14,22 @@
 
 ## 技术栈
 
+### 开发工具栈
+- **版本控制**: Git (分布式版本控制系统，支持团队协作开发)
+- **代码托管**: GitHub (代码托管平台，支持项目管理)
+
 ### 后端技术栈
 - **Web框架**: FastAPI (高性能异步框架，自动生成API文档)
-- **数据库**: SQLite/MySQL (主数据存储) + Elasticsearch (全文检索)
-- **缓存**: Redis (会话管理、热点数据缓存、消息队列)
-- **数据处理**: Pandas、NumPy、Scikit-learn (数据分析和机器学习)
-- **NLP处理**: spaCy、Transformers (自然语言处理)
+- **ORM工具**: SQLAlchemy (Python ORM工具，简化数据库操作)
+- **服务器**: Uvicorn (ASGI服务器，支持异步处理)
+- **数据库**: MySQL (关系型数据库，性能稳定，支持复杂查询)
+- **数据处理**: Pandas、NumPy (数据分析和处理)
 
 ### 前端技术栈
-- **框架**: Vue 3 + Composition API
-- **UI组件库**: Element Plus (企业级UI组件)
-- **图表库**: ECharts 5.x (数据可视化)
-- **状态管理**: Pinia (轻量级状态管理)
+- **框架**: Vue 3 (渐进式JavaScript框架，组合式API便于逻辑组织)
+- **UI组件库**: Element Plus (基于Vue 3的UI组件库，提供丰富的界面元素)
+- **图表库**: ECharts (数据可视化库，支持多种图表类型展示)
+- **构建工具**: Vite (前端构建工具，支持热重载和快速开发)
 
 ## 快速开始
 
