@@ -323,37 +323,30 @@ export default {
     
     // 初始化图表
     const initCharts = () => {
-      // 先销毁已存在的图表实例
-      if (cityChart) cityChart.dispose()
-      if (experienceChart) experienceChart.dispose()
-      if (industryChart) industryChart.dispose()
-      if (skillChart) skillChart.dispose()
-      
       // 确保DOM元素存在后再初始化
-      setTimeout(() => {
-        const cityEl = document.getElementById('city-chart')
-        const expEl = document.getElementById('experience-chart')
-        const industryEl = document.getElementById('industry-chart')
-        const skillEl = document.getElementById('skill-chart')
-        
-        if (cityEl) cityChart = echarts.init(cityEl)
-        if (expEl) experienceChart = echarts.init(expEl)
-        if (industryEl) industryChart = echarts.init(industryEl)
-        if (skillEl) skillChart = echarts.init(skillEl)
-        
-        // 设置默认图表（空数据）
-        const emptyOption = {
-          title: { text: '暂无数据', left: 'center', top: 'center' },
-          xAxis: { show: false },
-          yAxis: { show: false },
-          series: []
-        }
-        
-        if (cityChart) cityChart.setOption(emptyOption)
-        if (experienceChart) experienceChart.setOption(emptyOption)
-        if (industryChart) industryChart.setOption(emptyOption)
-        if (skillChart) skillChart.setOption(emptyOption)
-      }, 100)
+      const cityEl = document.getElementById('city-chart')
+      const expEl = document.getElementById('experience-chart')
+      const industryEl = document.getElementById('industry-chart')
+      const skillEl = document.getElementById('skill-chart')
+      
+      // 检查是否已经初始化过
+      if (!cityChart && cityEl) cityChart = echarts.init(cityEl)
+      if (!experienceChart && expEl) experienceChart = echarts.init(expEl)
+      if (!industryChart && industryEl) industryChart = echarts.init(industryEl)
+      if (!skillChart && skillEl) skillChart = echarts.init(skillEl)
+      
+      // 设置默认图表（空数据）
+      const emptyOption = {
+        title: { text: '暂无数据', left: 'center', top: 'center' },
+        xAxis: { show: false },
+        yAxis: { show: false },
+        series: []
+      }
+      
+      if (cityChart) cityChart.setOption(emptyOption)
+      if (experienceChart) experienceChart.setOption(emptyOption)
+      if (industryChart) industryChart.setOption(emptyOption)
+      if (skillChart) skillChart.setOption(emptyOption)
     }
     
     // 组件挂载时初始化

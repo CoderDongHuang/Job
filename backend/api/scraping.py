@@ -1,10 +1,11 @@
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from pydantic import BaseModel
-from typing import Dict, Any
+from typing import Dict, Any, List
 from database.database import SessionLocal
 from models import Job
 from sqlalchemy import func
 from datetime import datetime
+from utils.data_fetcher import fetch_job_data
 
 class ScrapingRequest(BaseModel):
     source: str
@@ -29,6 +30,8 @@ async def scrape_data_task(source: str):
             jobs = fetch_job_data("github")
         elif source == "mock":
             jobs = fetch_job_data("mock")
+        elif source == "real":
+            jobs = fetch_job_data("real")
         else:
             scraping_status["error"] = f"不支持的数据源: {source}"
             return
@@ -39,17 +42,37 @@ async def scrape_data_task(source: str):
             # 统计现有数据
             existing_count = db.query(func.count(Job.id)).scalar()
             
-            # 批量插入新数据
+            # 批量插入新数据，智能去重
+            new_jobs_count = 0
             for job_data in jobs:
-                job = Job(**job_data)
-                db.add(job)
+                # 对于模拟数据，使用更宽松的重复检查
+                if source == "mock":
+                    # 只检查完全相同的记录
+                    existing_job = db.query(Job).filter(
+                        Job.title == job_data.get('title', ''),
+                        Job.company == job_data.get('company', ''),
+                        Job.city == job_data.get('city', ''),
+                        Job.salary_min == job_data.get('salary_min', 0),
+                        Job.salary_max == job_data.get('salary_max', 0)
+                    ).first()
+                else:
+                    # 对于真实数据，使用严格的重复检查
+                    existing_job = db.query(Job).filter(
+                        Job.title == job_data.get('title', ''),
+                        Job.company == job_data.get('company', '')
+                    ).first()
+                
+                if not existing_job:
+                    job = Job(**job_data)
+                    db.add(job)
+                    new_jobs_count += 1
             
             db.commit()
             
             # 更新爬取状态
-            scraping_status["job_count"] = len(jobs)
+            scraping_status["job_count"] = new_jobs_count
             scraping_status["last_run"] = datetime.now().isoformat()
-            scraping_status["total_jobs"] = existing_count + len(jobs)
+            scraping_status["total_jobs"] = existing_count + new_jobs_count
             
         except Exception as e:
             db.rollback()
@@ -70,7 +93,7 @@ async def trigger_scraping(request_data: ScrapingRequest, background_tasks: Back
     if scraping_status["is_running"]:
         raise HTTPException(status_code=400, detail="爬取任务正在运行中")
     
-    if source not in ["github", "mock"]:
+    if source not in ["github", "mock", "real"]:
         raise HTTPException(status_code=400, detail="不支持的数据源")
     
     # 启动后台任务

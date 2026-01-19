@@ -128,74 +128,93 @@ def calculate_salary_by_skills(user_skills: list, user_experience: int, user_loc
     
     return reasonable_min, reasonable_max
 
-def generate_job_recommendations_from_db(user_skills: list, user_location: str, user_experience: int, max_salary: int) -> list:
-    """基于数据库中的真实职位数据生成推荐"""
+def generate_simple_job_recommendations(user_skills: list, user_location: str, user_experience: int) -> list:
+    """基于用户技能和数据库职位生成简单实用的推荐"""
     from database.database import SessionLocal
     from models import Job
     from sqlalchemy import or_
     
     db = SessionLocal()
     try:
-        # 构建技能匹配查询
-        query = db.query(Job)
+        # 获取数据库中的所有职位
+        all_jobs = db.query(Job).all()
         
-        # 技能匹配条件
-        if user_skills:
-            skill_conditions = []
-            for skill in user_skills:
-                skill_conditions.append(Job.description.contains(skill))
-                skill_conditions.append(Job.requirements.contains(skill))
-            
-            if skill_conditions:
-                query = query.filter(or_(*skill_conditions))
+        if not all_jobs:
+            return []
         
-        # 城市匹配
-        if user_location:
-            query = query.filter(Job.city == user_location)
-        
-        # 薪资范围筛选
-        query = query.filter(Job.salary_max <= max_salary * 1.5)  # 允许稍高薪资
-        
-        # 获取匹配的职位
-        matched_jobs = query.limit(5).all()
-        
-        # 转换为推荐格式
         recommendations = []
-        for job in matched_jobs:
-            # 计算匹配度
-            match_score = calculate_job_match_score(job, user_skills, user_experience)
-            
-            # 提取匹配的技能
-            matched_skills = []
-            for skill in user_skills:
-                if skill in job.description or skill in job.requirements:
-                    matched_skills.append(skill)
-            
-            # 提取缺失的技能
-            all_skills = extract_skills_from_text(job.requirements)
-            missing_skills = [skill for skill in all_skills if skill not in user_skills]
-            
-            recommendations.append({
-                'id': job.id,
-                'title': job.title,
-                'company': job.company,
-                'city': job.city,
-                'salary_min': job.salary_min,
-                'salary_max': job.salary_max,
-                'experience_required': job.experience_required or '经验不限',
-                'match_score': match_score,
-                'matched_skills': matched_skills[:3],
-                'missing_skills': missing_skills[:3]
-            })
         
-        # 按匹配度排序
+        # 为每个职位计算匹配度
+        for job in all_jobs:
+            # 1. 技能匹配度（最重要）
+            skill_match_score = 0
+            matched_skills = []
+            
+            if user_skills:
+                for skill in user_skills:
+                    # 更灵活的技能匹配（包含大小写不敏感和部分匹配）
+                    job_text = f"{job.description or ''} {job.requirements or ''} {str(job.tags or '')}".lower()
+                    skill_lower = skill.lower()
+                    
+                    # 检查技能是否出现在职位文本中
+                    if (skill_lower in job_text or
+                        any(skill_lower in word.lower() for word in job_text.split())):
+                        skill_match_score += 1
+                        matched_skills.append(skill)
+                
+                # 计算技能匹配百分比
+                skill_match_percentage = (skill_match_score / len(user_skills)) * 100 if user_skills else 0
+            else:
+                skill_match_percentage = 0
+                
+            # 如果没有用户技能，给一个基础分（避免完全没推荐）
+            if not user_skills:
+                skill_match_percentage = 30  # 基础匹配度
+            
+            # 2. 城市匹配度
+            city_match = 1 if user_location and job.city == user_location else 0.5
+            
+            # 3. 经验匹配度（简化处理）
+            experience_match = 0.8  # 默认匹配度
+            
+            # 4. 薪资吸引力（薪资越高越有吸引力）
+            salary_attractiveness = min(job.salary_max / 30000, 1.0)  # 假设30k为高薪基准
+            
+            # 计算综合匹配度（统一为0-100分制）
+            total_score = (skill_match_percentage * 0.6 +  # 技能权重60%
+                          city_match * 100 * 0.2 +        # 城市权重20%
+                          experience_match * 100 * 0.1 +  # 经验权重10%
+                          salary_attractiveness * 100 * 0.1)  # 薪资权重10%
+            
+            # 只推荐匹配度较高的职位（降低阈值）
+            if total_score >= 20:  # 匹配度阈值
+                recommendations.append({
+                    'id': job.id,
+                    'title': job.title,
+                    'company': job.company,
+                    'city': job.city,
+                    'salary_min': job.salary_min,
+                    'salary_max': job.salary_max,
+                    'experience_required': job.experience_required or '经验不限',
+                    'match_score': int(total_score),
+                    'matched_skills': matched_skills[:5],  # 最多显示5个匹配技能
+                    'description': job.description[:100] + '...' if len(job.description) > 100 else job.description
+                })
+        
+        # 按匹配度排序，取前6个推荐
         recommendations.sort(key=lambda x: x['match_score'], reverse=True)
         
-        # 如果没有足够匹配的职位，补充一些热门职位
-        if len(recommendations) < 3:
-            popular_jobs = db.query(Job).filter(Job.city == user_location).order_by(Job.salary_max.desc()).limit(3).all()
+        # 如果匹配的职位太少，补充一些热门职位
+        if len(recommendations) < 6:
+            # 按薪资排序获取热门职位
+            popular_jobs = db.query(Job).order_by(Job.salary_max.desc()).limit(10).all()
             for job in popular_jobs:
-                if job.id not in [r['id'] for r in recommendations]:
+                if job.id not in [r['id'] for r in recommendations] and len(recommendations) < 6:
+                    # 为热门职位计算一个基础匹配度
+                    base_score = 25
+                    if user_location and job.city == user_location:
+                        base_score += 10
+                    
                     recommendations.append({
                         'id': job.id,
                         'title': job.title,
@@ -204,13 +223,31 @@ def generate_job_recommendations_from_db(user_skills: list, user_location: str, 
                         'salary_min': job.salary_min,
                         'salary_max': job.salary_max,
                         'experience_required': job.experience_required or '经验不限',
-                        'match_score': 50,  # 默认匹配度
+                        'match_score': base_score,
                         'matched_skills': [],
-                        'missing_skills': extract_skills_from_text(job.requirements)[:3]
+                        'description': job.description[:100] + '...' if len(job.description) > 100 else job.description
                     })
         
-        return recommendations
-    
+        # 确保至少有3个推荐
+        if len(recommendations) < 3:
+            # 获取所有职位，按薪资排序
+            all_jobs_sorted = db.query(Job).order_by(Job.salary_max.desc()).limit(6).all()
+            for job in all_jobs_sorted:
+                if job.id not in [r['id'] for r in recommendations] and len(recommendations) < 3:
+                    recommendations.append({
+                        'id': job.id,
+                        'title': job.title,
+                        'company': job.company,
+                        'city': job.city,
+                        'salary_min': job.salary_min,
+                        'salary_max': job.salary_max,
+                        'experience_required': job.experience_required or '经验不限',
+                        'match_score': 20,  # 最低匹配度
+                        'matched_skills': [],
+                        'description': job.description[:100] + '...' if len(job.description) > 100 else job.description
+                    })
+        
+        return recommendations[:6]  # 最多返回6个推荐
     finally:
         db.close()
 
@@ -357,79 +394,174 @@ async def update_user_skills(user_id: int, skills: list) -> Optional[UserRespons
     finally:
         db.close()
 
-async def get_user_recommendations(user_id: int) -> Dict[str, Any]:
-    """获取用户个性化推荐 - 基于用户技能进行精确匹配"""
-    user = await get_user_by_id(user_id)
-    if not user:
-        return {}
-    
-    # 获取用户信息
-    user_skills = user.skills or []
-    user_location = user.location
-    user_experience = user.experience_years or 0
-    current_salary = user.current_salary or 0
-    target_salary = user.target_salary or 0
-    user_title = user.title or ""
-    
-    # 基于数据库中的真实职位数据进行薪资评估
-    from database.database import SessionLocal
-    from models import Job
-    from sqlalchemy import func, and_, or_
-    
+async def get_user_recommendations(user_id: int) -> dict:
+    """获取用户个性化推荐（基于数据库实际职位）"""
     db = SessionLocal()
     try:
-        # 1. 基于用户技能匹配相关职位
-        skill_query = db.query(Job)
-        if user_skills:
-            # 构建技能查询条件
-            skill_conditions = []
-            for skill in user_skills:
-                skill_conditions.append(Job.description.contains(skill))
-                skill_conditions.append(Job.requirements.contains(skill))
-            
-            if skill_conditions:
-                skill_query = skill_query.filter(or_(*skill_conditions))
+        # 获取用户信息
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            return {"recommended_jobs": [], "salary_analysis": {}, "skill_gap_analysis": {}}
         
-        # 2. 基于用户所在城市筛选
-        if user_location:
-            skill_query = skill_query.filter(Job.city == user_location)
+        # 解析用户技能
+        user_skills = []
+        if user.skills:
+            try:
+                user_skills = json.loads(user.skills) if isinstance(user.skills, str) else user.skills
+            except:
+                user_skills = []
         
-        # 3. 基于用户经验筛选合适的职位
-        experience_filtered_jobs = skill_query.all()
+        # 获取用户位置和经验
+        user_location = user.location or ""
+        user_experience = user.experience_years or 0
+        current_salary = user.current_salary or 0
+        target_salary = user.target_salary or 0
         
-        # 4. 计算匹配职位的薪资统计数据
-        if experience_filtered_jobs:
-            # 计算平均薪资
-            avg_min = sum(job.salary_min for job in experience_filtered_jobs) / len(experience_filtered_jobs)
-            avg_max = sum(job.salary_max for job in experience_filtered_jobs) / len(experience_filtered_jobs)
-            
-            # 根据用户经验调整薪资范围
-            experience_factor = min(1.0 + (user_experience * 0.15), 2.5)  # 最多2.5倍
-            reasonable_min = int(avg_min * experience_factor * 0.8)  # 80%作为下限
-            reasonable_max = int(avg_max * experience_factor * 1.2)  # 120%作为上限
-        else:
-            # 如果没有匹配职位，使用基于技能和经验的算法
-            reasonable_min, reasonable_max = calculate_salary_by_skills(user_skills, user_experience, user_location)
-    
+        # 生成职位推荐
+        job_recommendations = generate_simple_job_recommendations(
+            user_skills, user_location, user_experience
+        )
+        
+        # 生成技能推荐（基于职位要求）
+        skill_recommendations = generate_skill_recommendations(user_skills, job_recommendations)
+        
+        # 计算薪资分析（基于推荐职位）
+        salary_analysis = calculate_salary_analysis(job_recommendations, current_salary, target_salary, user_experience)
+        
+        # 生成技能缺口分析
+        skill_gap_analysis = generate_skill_gap_analysis(user_skills, job_recommendations)
+        
+        return {
+            "recommended_jobs": job_recommendations,  # 前端期望的字段名
+            "salary_analysis": salary_analysis,        # 薪资评估数据
+            "skill_gap_analysis": skill_gap_analysis,  # 技能缺口分析
+            "skill_recommendations": skill_recommendations  # 保留原有字段
+        }
     finally:
         db.close()
+
+def generate_skill_recommendations(user_skills: list, job_recommendations: list) -> list:
+    """基于职位推荐生成技能发展建议"""
+    if not job_recommendations:
+        return []
     
-    # 基于用户技能生成职位推荐（使用真实数据库数据）
-    recommended_jobs = generate_job_recommendations_from_db(user_skills, user_location, user_experience, reasonable_max)
+    # 收集所有推荐职位中提到的技能
+    all_skills = set()
+    for job in job_recommendations:
+        if job.get('description'):
+            # 从描述中提取技能关键词
+            description_skills = extract_skills_from_text(job['description'])
+            all_skills.update(description_skills)
     
-    # 技能缺口分析
-    skill_gap_analysis = analyze_skill_gaps(user_skills, user_title)
+    # 过滤掉用户已经掌握的技能
+    missing_skills = [skill for skill in all_skills if skill not in user_skills]
     
-    return {
-        "recommended_jobs": recommended_jobs,
-        "skill_gap_analysis": skill_gap_analysis,
-        "salary_analysis": {
-            "reasonable_min": reasonable_min,
-            "reasonable_max": reasonable_max,
+    # 生成技能推荐
+    recommendations = []
+    for skill in missing_skills[:5]:  # 最多推荐5个技能
+        # 根据技能类型确定重要性和理由
+        importance, reason = get_skill_importance(skill)
+        recommendations.append({
+            "skill": skill,
+            "importance": importance,
+            "reason": reason
+        })
+    
+    return recommendations
+
+def get_skill_importance(skill: str) -> tuple:
+    """获取技能的重要性和推荐理由"""
+    skill_importance = {
+        "Python": ("高", "Python是当前最热门的编程语言，广泛应用于Web开发、数据科学和AI领域"),
+        "Java": ("高", "Java在企业级应用开发中占据重要地位，是大型系统的首选语言"),
+        "JavaScript": ("高", "JavaScript是前端开发的基石，掌握它对于Web开发至关重要"),
+        "TypeScript": ("中", "TypeScript提升了JavaScript的开发体验，是现代前端开发的趋势"),
+        "Vue.js": ("中", "Vue.js是国内最受欢迎的前端框架之一，学习曲线平缓"),
+        "React": ("高", "React是全球最流行的前端框架，拥有丰富的生态系统"),
+        "Docker": ("高", "Docker是容器化技术的代表，是现代DevOps的必备技能"),
+        "Kubernetes": ("中", "Kubernetes是容器编排的标准，适合大规模分布式系统"),
+        "MySQL": ("中", "MySQL是最常用的关系型数据库，是后端开发的必备知识"),
+        "Redis": ("中", "Redis是高性能的缓存数据库，能显著提升系统性能"),
+        "机器学习": ("高", "机器学习是AI领域的核心技术，具有广阔的发展前景"),
+        "数据分析": ("中", "数据分析能力在各行各业都有重要应用价值")
+    }
+    
+    return skill_importance.get(skill, ("中", "该技能在当前技术领域具有重要应用价值"))
+
+def calculate_salary_analysis(job_recommendations: list, current_salary: int, target_salary: int, user_experience: int) -> dict:
+    """基于推荐职位计算薪资分析"""
+    if not job_recommendations:
+        # 如果没有推荐职位，使用默认值
+        return {
+            "reasonable_min": 8000,
+            "reasonable_max": 20000,
             "current_salary": current_salary,
             "target_salary": target_salary,
             "salary_gap": target_salary - current_salary if current_salary > 0 else 0
         }
+    
+    # 基于推荐职位计算合理的薪资范围
+    salaries_min = [job.get('salary_min', 0) for job in job_recommendations if job.get('salary_min', 0) > 0]
+    salaries_max = [job.get('salary_max', 0) for job in job_recommendations if job.get('salary_max', 0) > 0]
+    
+    if salaries_min and salaries_max:
+        # 计算平均薪资范围
+        avg_min = sum(salaries_min) / len(salaries_min)
+        avg_max = sum(salaries_max) / len(salaries_max)
+        
+        # 根据用户经验调整薪资范围
+        experience_factor = min(1.0 + (user_experience * 0.15), 2.5)  # 最多2.5倍
+        reasonable_min = int(avg_min * experience_factor * 0.8)  # 80%作为下限
+        reasonable_max = int(avg_max * experience_factor * 1.2)  # 120%作为上限
+    else:
+        # 使用默认值
+        reasonable_min = 8000
+        reasonable_max = 20000
+    
+    return {
+        "reasonable_min": reasonable_min,
+        "reasonable_max": reasonable_max,
+        "current_salary": current_salary,
+        "target_salary": target_salary,
+        "salary_gap": target_salary - current_salary if current_salary > 0 else 0
+    }
+
+def generate_skill_gap_analysis(user_skills: list, job_recommendations: list) -> dict:
+    """生成技能缺口分析"""
+    if not job_recommendations:
+        return {"gaps": [], "improvement_suggestions": []}
+    
+    # 收集所有推荐职位中提到的技能
+    all_required_skills = set()
+    for job in job_recommendations:
+        if job.get('description'):
+            job_skills = extract_skills_from_text(job['description'])
+            all_required_skills.update(job_skills)
+    
+    # 找出用户缺失的技能
+    missing_skills = [skill for skill in all_required_skills if skill not in user_skills]
+    
+    # 生成技能缺口分析
+    gaps = []
+    for skill in missing_skills[:5]:  # 最多分析5个技能缺口
+        importance, reason = get_skill_importance(skill)
+        gaps.append({
+            "skill": skill,
+            "importance": importance,
+            "reason": reason
+        })
+    
+    # 生成改进建议
+    improvement_suggestions = [
+        "提升技能匹配度：学习当前热门技术",
+        "增加工作经验：每增加一年经验，薪资可提升约10-15%",
+        "考虑城市发展：一线城市薪资普遍比二三线城市高20-30%",
+        "关注行业趋势：AI、大数据、云计算等方向薪资增长较快"
+    ]
+    
+    return {
+        "gaps": gaps,
+        "improvement_suggestions": improvement_suggestions
     }
 
 def generate_job_recommendations(user_skills: list, user_location: str, max_salary: int) -> list:

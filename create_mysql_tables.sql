@@ -101,9 +101,3 @@ CREATE TABLE data_scraping_logs (
     INDEX idx_status (status),
     INDEX idx_created_at (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='数据爬取日志表';
-
--- 插入示例用户数据（用于演示）
-INSERT INTO users (username, email, password_hash, full_name, title, experience_years, current_salary, target_salary, location, education, skills) VALUES
-('zhangsan', 'zhangsan@example.com', '$2b$12$examplehash', '张三', '前端开发工程师', 3, 15000, 20000, '北京', '本科', '["JavaScript", "Vue.js", "React", "HTML5", "CSS3"]'),
-('lisi', 'lisi@example.com', '$2b$12$examplehash', '李四', 'Python开发工程师', 5, 20000, 30000, '上海', '硕士', '["Python", "Django", "Flask", "MySQL", "Redis"]'),
-('wangwu', 'wangwu@example.com', '$2b$12$examplehash', '王五', '数据科学家', 2, 18000, 25000, '深圳', '博士', '["Python", "机器学习", "深度学习", "数据分析", "SQL"]');

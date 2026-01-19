@@ -52,23 +52,6 @@
         </div>
       </el-form>
     </el-card>
-    
-    <!-- 演示账号提示 -->
-    <el-card class="demo-accounts" style="margin-top: 20px;">
-      <template #header>
-        <div class="card-header">
-          <h4>演示账号</h4>
-        </div>
-      </template>
-      <div class="demo-account-list">
-        <div v-for="account in demoAccounts" :key="account.username" class="demo-account">
-          <p><strong>用户名:</strong> {{ account.username }}</p>
-          <p><strong>密码:</strong> {{ account.password }}</p>
-          <p><strong>职位:</strong> {{ account.title }}</p>
-          <el-button size="small" @click="fillDemoAccount(account)">使用此账号</el-button>
-        </div>
-      </div>
-    </el-card>
   </div>
 </template>
 
@@ -100,12 +83,6 @@ export default {
         { min: 6, message: '密码长度至少 6 个字符', trigger: 'blur' }
       ]
     }
-    
-    const demoAccounts = ref([
-      { username: 'zhangsan', password: 'password123', title: '前端开发工程师' },
-      { username: 'lisi', password: 'password123', title: 'Python开发工程师' },
-      { username: 'wangwu', password: 'password123', title: '数据科学家' }
-    ])
     
     const handleLogin = async () => {
       if (!loginFormRef.value) return
@@ -140,20 +117,13 @@ export default {
       router.push('/register')
     }
     
-    const fillDemoAccount = (account) => {
-      loginForm.username = account.username
-      loginForm.password = account.password
-    }
-    
     return {
       loginFormRef,
       loginForm,
       loginRules,
       loading,
-      demoAccounts,
       handleLogin,
-      goToRegister,
-      fillDemoAccount
+      goToRegister
     }
   }
 }
@@ -193,28 +163,5 @@ export default {
 .login-footer {
   text-align: center;
   margin-top: 20px;
-}
-
-.demo-accounts {
-  width: 400px;
-  max-width: 90vw;
-}
-
-.demo-account-list {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.demo-account {
-  padding: 15px;
-  border: 1px solid #e4e7ed;
-  border-radius: 4px;
-  background: #f8f9fa;
-}
-
-.demo-account p {
-  margin: 5px 0;
-  font-size: 14px;
 }
 </style>

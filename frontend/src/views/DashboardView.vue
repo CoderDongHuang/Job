@@ -70,7 +70,7 @@
               <el-tag 
                 v-for="skill in userInfo.skills" 
                 :key="skill" 
-                size="medium"
+                size="default"
                 closable
                 @close="removeSkill(skill)"
                 style="margin: 4px;"

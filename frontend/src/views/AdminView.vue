@@ -37,8 +37,9 @@
             <el-form label-width="120px">
               <el-form-item label="数据源">
                 <el-radio-group v-model="selectedSource">
+                  <el-radio value="real">真实数据</el-radio>
                   <el-radio value="mock">模拟数据</el-radio>
-                  <el-radio value="github">GitHub Jobs</el-radio>
+                  <el-radio value="github">GitHub Jobs（已失效）</el-radio>
                 </el-radio-group>
               </el-form-item>
               
@@ -150,13 +151,17 @@ import request from '@/utils/request'
 export default {
   name: 'AdminView',
   setup() {
-    const selectedSource = ref('mock')
+    const selectedSource = ref('real')  // 默认选择真实数据
     const showClearDialog = ref(false)
     const clearing = ref(false)
     
     // 图表引用
     const cityChart = ref(null)
     const categoryChart = ref(null)
+    
+    // 图表实例
+    let cityChartInstance = null
+    let categoryChartInstance = null
     
     // 状态数据
     const scrapingStatus = reactive({
@@ -264,8 +269,16 @@ export default {
     const updateCharts = () => {
       if (!cityChart.value || !categoryChart.value) return
       
+      // 检查是否已经初始化过
+      if (!cityChartInstance) {
+        cityChartInstance = echarts.init(cityChart.value)
+      }
+      
+      if (!categoryChartInstance) {
+        categoryChartInstance = echarts.init(categoryChart.value)
+      }
+      
       // 城市分布图表
-      const cityChartInstance = echarts.init(cityChart.value)
       const cityOption = {
         tooltip: {
           trigger: 'axis',
@@ -289,7 +302,6 @@ export default {
       cityChartInstance.setOption(cityOption)
       
       // 类别分布图表
-      const categoryChartInstance = echarts.init(categoryChart.value)
       const categoryOption = {
         tooltip: {
           trigger: 'item',
@@ -361,6 +373,16 @@ export default {
     onUnmounted(() => {
       if (statusTimer) {
         clearInterval(statusTimer)
+      }
+      
+      // 销毁图表实例
+      if (cityChartInstance) {
+        cityChartInstance.dispose()
+        cityChartInstance = null
+      }
+      if (categoryChartInstance) {
+        categoryChartInstance.dispose()
+        categoryChartInstance = null
       }
     })
     
